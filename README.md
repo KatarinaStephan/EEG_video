@@ -11,7 +11,7 @@ hour, minute, second = HH, MM, SS
 
 ## **Update the bandpass filter settings**
 
-The EEG bandpass filter is set in `plot_time_slice_raw()`. Typical filter_bandpass_max=15 or 30
+The EEG bandpass filter is set in `plot_time_slice_raw()`. Typically set at filter_bandpass_max=15 or 30.
 
 ```
 plot_time_slice_raw(
