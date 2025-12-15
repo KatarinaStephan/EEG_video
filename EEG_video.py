@@ -113,13 +113,13 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 		return ax,
 
 	def on_click(event):
-		# Check where the click happened
+		# If mouse click occured on the time slider
 		(xm,ym),(xM,yM) = slider_position.label.clipbox.get_points()
 		if xm < event.x < xM and ym < event.y < yM:
-			# Event happened within the slider, ignore since it is handled in update_slider
+			# If clicked within the slider region, do nothing since it is handled in update_slider
 			return
 		else:
-			# user clicked somewhere else on canvas = unpause
+			# if clicked somewhere else on figure, resume automatic EEG video scrolling 
 			global is_manual
 			is_manual=False
 
