@@ -1,6 +1,6 @@
 # Displays EEG Tracings for Channel 1, Channel 2 and the Difference Channel (Ch2 - Ch1)
 
-## **Update the CSV filename and recording start time**
+## **Update the .csv filename and recording start time**
 
 In `main()`, update the filename to match the .csv file and set the recording start time (HH, MM, SS) of the .csv file:
 
