@@ -20,7 +20,7 @@ def read_file(filename):
 	return df
 
 
-def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, filter_bandpass_max=30, output_filename='eeg_animation.mp4', duration_seconds=60):
+def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, filter_bandpass_max=30, output_filename='eeg_animation.mp4', duration_seconds=60, playback_speed=20):
 
 	time_raw = time
 	channel1_raw = ch1
@@ -50,8 +50,8 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 
 	is_manual = False # True if taken control of the animation
 	interval = 100 # ms, time between animation frames
-	loop_len = 0.2 # seconds per loop
-	scale = interval / 1000 / loop_len
+	fps = 1000/interval
+	scale = playback_speed / fps
 
 	def update_slider(val):
 		global is_manual
@@ -131,12 +131,10 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 	# ADDED FOR SAVING VIDEO
 	###########################################################################
 	data_duration = np.max(time_each) - np.min(time_each)
-	duration_seconds = min(data_duration, duration_seconds)
-	fps = 1000 / interval
 	# USE THIS TO STOP BEFORE THE END OF DATA
 	# total_frames = int(duration_seconds * fps)
 	# USE THIS ONE FOR THE WHOLE FILE
-	total_frames = int(data_duration * fps)
+	total_frames = int(data_duration * fps / playback_speed)
 	# total_frames = 100
 
 	# HOW TO USE:
@@ -157,7 +155,7 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 def main(output_filename="eeg_animation.mp4"):
 
 	# Raw 
-	filename = 'record-[2022.08.22-14.31.58].csv'
+	filename = 'record-[2025.01.22-13.39.53].csv'
 	df_raw = read_file(filename)
 
 
@@ -171,7 +169,7 @@ def main(output_filename="eeg_animation.mp4"):
 	channel2_raw = np.array(df_raw['Channel 2'])
 
 	# get starting time
-	hour, minute, second = 14, 31, 58
+	hour, minute, second = 13, 39, 53
 	starting_time = (hour*3600+ minute*60+ second)
 
 	def convert_realtime_to_seconds(h, m, s, starting_time):
@@ -190,7 +188,7 @@ def main(output_filename="eeg_animation.mp4"):
 	filter_bandpass_min = 1,
 	filter_bandpass_max = 15,
 	output_filename=output_filename,
-	duration_seconds=60)
+	playback_speed=20)
 
 	plt.show()
 
