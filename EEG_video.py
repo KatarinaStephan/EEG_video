@@ -1,14 +1,15 @@
 import pandas as pd
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from datetime import timedelta
 import scipy.signal as sig
 from matplotlib.widgets import Slider
+from argparse import ArgumentParser
 
 
 def read_file(filename):
-	
 	if filename[-4:] == 'xlsx':
 		df = pd.read_excel(filename)
 	elif filename[-3:] == 'csv':
@@ -19,7 +20,7 @@ def read_file(filename):
 	return df
 
 
-def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, filter_bandpass_max=30):
+def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, filter_bandpass_max=30, output_filename='eeg_animation.mp4', duration_seconds=60):
 
 	time_raw = time
 	channel1_raw = ch1
@@ -87,7 +88,6 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 		xticks_raw = ax.get_xticks()
 		xticks_analog = ['{:s}'.format(str(timedelta(seconds = starting_time + xt))) for xt in xticks_raw]
 
-
 		ax.set_xticklabels(xticks_analog)
 
 		# display y-ticks from -100 to +100
@@ -116,31 +116,55 @@ def plot_time_slice_raw(time, ch1, ch2, starting_time, filter_bandpass_min=1, fi
 		# If mouse click occured on the time slider
 		(xm,ym),(xM,yM) = slider_position.label.clipbox.get_points()
 		if xm < event.x < xM and ym < event.y < yM:
-			# If clicked within the slider region, do nothing since it is handled in update_slider
+		# If clicked within the slider region, do nothing since it is handled in update_slider
 			return
 		else:
-			# if clicked somewhere else on figure, resume automatic EEG video scrolling 
+		# if clicked somewhere else on figure, resume automatic EEG video scrolling 
 			global is_manual
 			is_manual=False
 
-		
 
 	slider_position.on_changed(update_slider)
 
 	fig.canvas.mpl_connect('button_press_event', on_click)
+	###########################################################################
+	# ADDED FOR SAVING VIDEO
+	###########################################################################
+	data_duration = np.max(time_each) - np.min(time_each)
+	duration_seconds = min(data_duration, duration_seconds)
+	fps = 1000 / interval
+	# USE THIS TO STOP BEFORE THE END OF DATA
+	# total_frames = int(duration_seconds * fps)
+	# USE THIS ONE FOR THE WHOLE FILE
+	total_frames = int(data_duration * fps)
+	# total_frames = 100
 
-	ani = animation.FuncAnimation(fig, update_plot, interval=interval)
+	# HOW TO USE:
+	# - total_frames is the number of frames to save
+	# - fps is the frame rate
+	# - duration_seconds is the duration of the video
+	# - interval is the time between frames
+	# - data_duration is the duration of the data
+	# - duration_seconds is the duration of the video
+	fig, ax = plt.subplots(figsize=(16, 5))
+	ani = animation.FuncAnimation(fig, update_plot, interval=interval, frames=total_frames)
+	ani.save(output_filename, writer='ffmpeg', fps=fps)
+	print(f"Video saved successfully to {output_filename}!")
 
 	plt.show()
 
 
-	
-def main():
+def main(output_filename="eeg_animation.mp4"):
 
 	# Raw 
 	filename = 'record-[2022.08.22-14.31.58].csv'
 	df_raw = read_file(filename)
 
+
+	# Output video filename from CSV filename
+	base_name, _ = os.path.splitext(filename)         
+	output_filename = f"{base_name}-video.mp4"  
+	
 
 	time_raw = np.array(df_raw['Time:512Hz'])
 	channel1_raw = np.array(df_raw['Channel 1'])
@@ -148,10 +172,10 @@ def main():
 
 	# get starting time
 	hour, minute, second = 14, 31, 58
-	starting_time = (hour*3600+ minute*60+ second)	
+	starting_time = (hour*3600+ minute*60+ second)
 
 	def convert_realtime_to_seconds(h, m, s, starting_time):
-		real_time_seconds = h*3600 + m*60 + s	
+		real_time_seconds = h*3600 + m*60 + s
 		return real_time_seconds - starting_time 
 
 		# Subtract the starting time of the raw file so that the time inputted is time after start of raw file
@@ -162,14 +186,20 @@ def main():
 	### MAKE PLOTS ###
 
 	plot_time_slice_raw(time_raw, channel1_raw, channel2_raw,
-				starting_time = starting_time,
-				filter_bandpass_min = 1,
-				filter_bandpass_max = 15)
+	starting_time = starting_time,
+	filter_bandpass_min = 1,
+	filter_bandpass_max = 15,
+	output_filename=output_filename,
+	duration_seconds=60)
 
 	plt.show()
 
 
 ### MAIN SCRIPT
+# HOW TO USE:
+# - python EEG_video.py - runs the script in default mode
+# - python EEG_video.py -s - runs the scripts and saves a .mp4 video
+
 
 if __name__ == "__main__":
 	main()
